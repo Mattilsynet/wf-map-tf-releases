@@ -1,0 +1,25 @@
+name: Terraform format and linter checks
+
+on:
+  workflow_call:
+
+jobs:
+  format-and-lint-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform format
+        run: terraform fmt -recursive
+        continue-on-error: true
+
+      - uses: terraform-linters/setup-tflint@v3
+
+      - name: Run TFLint
+        run: tflint -f compact --recursive

@@ -1,0 +1,45 @@
+name: Draft Releaser
+
+on:
+  workflow_call:
+
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged && contains( github.event.pull_request.labels.*.name, 'release')
+    steps:
+
+    - name: Check out source
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Calculate tag
+      id: version
+      uses: paulhatch/semantic-version@v5.0.3
+      with:
+        major_pattern: '/^(major|breaking|break)!?(\(.*\))?!?:\s.+$|((^(\w+)!(\(.*\))?!?:\s.+$)|(^(\w+)(\(.*\))!:\s.+$))/'
+        minor_pattern: '/^(feat|feature)(\(.*\))?:\s.+$/'
+
+
+    - name: Set tag
+      run: git tag ${{ steps.version.outputs.version_tag }}
+
+    - name: Push latest version
+      run: git push --tags
+
+    - uses: actions/setup-go@v3
+      with:
+        go-version: '>=1.19.0'
+
+    - name: Setup git-chglog
+      run: go install github.com/git-chglog/git-chglog/cmd/git-chglog@latest
+
+    - name: Run git-chglog
+      run: git-chglog ${{ steps.version.outputs.version_tag }} > notes.md
+
+    - name: Create Release
+      run: gh release create ${{ steps.version.outputs.version_tag }} --title ${{ steps.version.outputs.version_tag }}  -F ./notes.md --draft
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

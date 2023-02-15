@@ -1,0 +1,29 @@
+name: Create Draft Release on Tag (push)
+
+on:
+  workflow_call:
+
+jobs:
+  release:
+    name: Create Github Release
+    runs-on: ubuntu-latest
+    if: github.ref_type == 'tag'
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v3
+        with:
+          go-version: '>=1.19.0'
+      - name: Setup git-chglog
+        run: go install github.com/git-chglog/git-chglog/cmd/git-chglog@latest
+      - name: Run git-chglog
+        run: git-chglog ${{ github.ref_name }} > notes.md
+
+      - name: Create Release
+        run: gh release create ${{ github.ref_name }} --title ${{ github.ref_name }} -F ./notes.md --draft
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

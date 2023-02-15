@@ -1,0 +1,36 @@
+name: Tag tester
+
+on:
+  workflow_call:
+
+jobs:
+  tag_printer:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Check out source
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Calculate tag
+      id: version
+      uses: paulhatch/semantic-version@v5.0.3
+      with:
+        major_pattern: '/^(major|breaking|break)!?(\(.*\))?!?:\s.+$|((^(\w+)!(\(.*\))?!?:\s.+$)|(^(\w+)(\(.*\))!:\s.+$))/'
+        minor_pattern: '/^(feat|feature)(\(.*\))?:\s.+$/'
+
+    - name: Update Pull Request
+      uses: actions/github-script@v6
+      if: github.event_name == 'pull_request'
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const output = `Predicted tag change: ${{ steps.version.outputs.previous_version }} -> ${{ steps.version.outputs.version_tag }}`;
+
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+          })
