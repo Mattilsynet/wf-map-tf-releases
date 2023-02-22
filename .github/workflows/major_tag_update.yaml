@@ -1,0 +1,30 @@
+name: Update Major Tag
+
+on:
+  push:
+    tags:
+      - v*.*.*
+      - '!v*.*.*-rc'
+
+jobs:
+  # release:
+  #   name: Create Github Release
+  #   uses: Mattilsynet/wf-map-tf-releases/.github/workflows/release_on_tag_push.yaml@v0
+  #   if: github.ref_type == 'tag'
+  #   secrets: inherit
+  floating:
+    name: Create floating tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          MAJOR=${VERSION%%.*}
+          echo ${MAJOR}
+          git config --global user.email "${GITHUB_ACTOR}"
+          git config --global user.name "${GITHUB_ACTOR}@users.noreply.github.com"
+          git tag -fa ${MAJOR} -m "Update major version tag"
+          git push origin ${MAJOR} --force
