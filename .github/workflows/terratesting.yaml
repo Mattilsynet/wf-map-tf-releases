@@ -1,0 +1,65 @@
+on:
+  workflow_call:
+    inputs:
+      tests_overall_timeout:
+        required: false
+        type: string
+        default: 40m
+      test_project_number:
+        required: false
+        type: string
+        default: 912137435662
+      test_project_id:
+        required: false
+        type: string
+        default: tf-test-env-2381
+      test_code_folder:
+        type: string
+        required: true
+      workload_identity_pool_id:
+        type: string
+        required: false
+        default: gh-actions-terratest
+
+jobs:
+  deploy:
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    name: Terratest testing
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_wrapper: false
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.20.2'
+          cache: false
+      - id: 'gcp-auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v1'
+        with:
+          workload_identity_provider: projects/${{ inputs.test_project_number }}/locations/global/workloadIdentityPools/${{ inputs.workload_identity_pool_id }}/providers/github
+          service_account: tf-admin-sa@${{ inputs.test_project_id }}.iam.gserviceaccount.com
+      - id: 'prep-testing'
+        name: 'Prepare golang environment'
+        run: |
+          cd ${{ inputs.test_code_folder }}/
+          go mod tidy
+          gofmt -s -w *.go
+      - id: 'configure-git'
+        name: 'Configure git to use PAT'
+        run: |
+          git config --global url."https://oauth2:${{ secrets.READ_MAP_TF_MODULES }}@github.com/Mattilsynet".insteadOf "https://github.com/Mattilsynet"
+      - id: 'run-tests'
+        name: 'Run tests'
+        run: |
+          cd ${{ inputs.test_code_folder }}/
+          go test -v -timeout ${{ inputs.tests_overall_timeout }}
+      - id: 'clean-git'
+        name: 'Clean git config'
+        run: |
+          git config --global --unset url.https://oauth2:${{ secrets.READ_MAP_TF_MODULES }}@github.com/Mattilsynet.insteadof
