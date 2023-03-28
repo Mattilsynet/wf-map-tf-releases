@@ -2,6 +2,24 @@
 
 Reusable workflows for MAP terraform modules
 
+## Workflows
+
+### terratesting.yaml
+
+Workflow for running terratest code (golang)
+
+#### Input variables
+
+| Variable | Description | Default |Required |
+|----------|-------------|---------|---------|
+|tests_overall_timeout | Test timeout | 40m | false |
+|test_project_number| Test GCP Project number | 912137435662 | false |
+|test_project_id | Test GCP Project id | tf-test-env-2381 | false |
+|test_code_folder| Folder containing both golang and testable terraform code| null | true |
+|workload_identity_pool_id| Configured workload identity pool id used for github actions | gh-actions-terratest | false
+
+> NOTE: Default values provided for specially created Managed Environment created via mattilsynet-operations repository (project number and id, workload identity pool id)
+
 ## Versioning
 
 Single digit major tag (vX) will always point to the latest {MINOR}.{PATCH} tag withing major version. Example:
