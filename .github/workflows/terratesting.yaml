@@ -16,6 +16,10 @@ on:
       test_code_folder:
         type: string
         required: true
+      test_run_arg:
+        type: string
+        required: false
+        default: ""
       workload_identity_pool_id:
         type: string
         required: false
@@ -58,7 +62,8 @@ jobs:
         name: 'Run tests'
         run: |
           cd ${{ inputs.test_code_folder }}/
-          go test -v -timeout ${{ inputs.tests_overall_timeout }}
+          go test -v ${{ inputs.test_run_arg }} -timeout ${{ inputs.tests_overall_timeout }}
+
       - id: 'clean-git'
         name: 'Clean git config'
         run: |
