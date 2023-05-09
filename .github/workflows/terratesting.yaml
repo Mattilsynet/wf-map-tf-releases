@@ -19,7 +19,8 @@ on:
       test_run_arg:
         type: string
         required: false
-        default: ""
+        default: "Test*"
+        description: "Regex expression. By default runs all tests which names start with Test"
       workload_identity_pool_id:
         type: string
         required: false
@@ -62,7 +63,7 @@ jobs:
         name: 'Run tests'
         run: |
           cd ${{ inputs.test_code_folder }}/
-          go test -v ${{ inputs.test_run_arg }} -timeout ${{ inputs.tests_overall_timeout }}
+          go test -v -run ${{ inputs.test_run_arg }} -timeout ${{ inputs.tests_overall_timeout }}
 
       - id: 'clean-git'
         name: 'Clean git config'
