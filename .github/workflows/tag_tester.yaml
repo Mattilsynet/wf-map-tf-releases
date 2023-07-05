@@ -6,6 +6,8 @@ on:
 jobs:
   tag_printer:
     runs-on: ubuntu-latest
+    outputs:
+      version_tag: ${{  steps.updatepr.outputs }}
     steps:
 
     - name: Check out source
@@ -21,6 +23,7 @@ jobs:
         minor_pattern: '/^(feat|feature)(\(.*\))?:\s.+$/'
 
     - name: Update Pull Request
+      id: updatepr
       uses: actions/github-script@v6
       if: github.event_name == 'pull_request'
       with:
@@ -34,6 +37,7 @@ jobs:
             repo: context.repo.repo,
             body: output
           })
+          echo ${{ steps.version.outputs.version_tag }} >> $GITHUB_OUTPUT
           
   release_checker:
     name: sjekker version
@@ -41,5 +45,5 @@ jobs:
     uses: Mattilsynet/wf-map-release-check/.github/workflows/Updatecheck.yaml@v1
     with:
       inform_only: true
-      Self_Predicted_Tag: ${{ steps.version.outputs.version_tag }}
+      Self_Predicted_Tag: ${{ needs.tag_printer.outputs.version_tag }}
       
