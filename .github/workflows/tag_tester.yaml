@@ -34,3 +34,9 @@ jobs:
             repo: context.repo.repo,
             body: output
           })
+          
+  release_checker:
+    name: sjekker version
+    secrets: inherit
+    uses: Mattilsynet/wf-map-release-check/.github/workflows/Updatecheck.yaml@v1
+       
