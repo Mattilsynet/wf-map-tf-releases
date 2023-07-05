@@ -7,7 +7,7 @@ jobs:
   tag_printer:
     runs-on: ubuntu-latest
     outputs:
-      version_tag: ${{  steps.outputversion.outputs.version_tag }}
+      version_tag: ${{ steps.outputversion.outputs.version_tag }}
     steps:
 
     - name: Check out source
@@ -40,13 +40,14 @@ jobs:
     - name: output tag version to next jobs
       id: outputversion
       run: |
-        echo "version_tag=\"${{ steps.version.outputs.version_tag }}\"" >> $GITHUB_OUTPUT
+        echo "version_tag=${{ steps.version.outputs.version_tag }}" >> $GITHUB_OUTPUT
 
   release_checker:
+    needs: tag_printer
     name: sjekker version
     secrets: inherit
     uses: Mattilsynet/wf-map-release-check/.github/workflows/Updatecheck.yaml@v1
     with:
       inform_only: true
-      Self_Predicted_Tag: fromJSON(${{ needs.tag_printer.outputs.version_tag }})
+      Self_Predicted_Tag: "${{ needs.tag_printer.outputs.version_tag }}"
       
