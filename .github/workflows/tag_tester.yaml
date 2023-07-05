@@ -39,4 +39,7 @@ jobs:
     name: sjekker version
     secrets: inherit
     uses: Mattilsynet/wf-map-release-check/.github/workflows/Updatecheck.yaml@v1
-       
+    with:
+      inform_only: true
+      Self_Predicted_Tag: ${{ steps.version.outputs.version_tag }}
+      
