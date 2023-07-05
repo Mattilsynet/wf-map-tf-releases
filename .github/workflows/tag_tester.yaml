@@ -7,7 +7,7 @@ jobs:
   tag_printer:
     runs-on: ubuntu-latest
     outputs:
-      version_tag: ${{  steps.updatepr.outputs }}
+      version_tag: ${{  steps.outputversion.outputs.version_tag }}
     steps:
 
     - name: Check out source
@@ -23,7 +23,6 @@ jobs:
         minor_pattern: '/^(feat|feature)(\(.*\))?:\s.+$/'
 
     - name: Update Pull Request
-      id: updatepr
       uses: actions/github-script@v6
       if: github.event_name == 'pull_request'
       with:
@@ -37,8 +36,12 @@ jobs:
             repo: context.repo.repo,
             body: output
           })
-          echo "${{ steps.version.outputs.version_tag }}" >> $GITHUB_OUTPUT
-          
+
+    - name: output tag version to next jobs
+      id: outputversion
+      run: |
+        echo "version_tag=${{ steps.version.outputs.version_tag }}" >> $GITHUB_OUTPUT
+
   release_checker:
     name: sjekker version
     secrets: inherit
