@@ -37,7 +37,7 @@ jobs:
             repo: context.repo.repo,
             body: output
           })
-          echo ${{ steps.version.outputs.version_tag }} >> $GITHUB_OUTPUT
+          echo "${{ steps.version.outputs.version_tag }}" >> $GITHUB_OUTPUT
           
   release_checker:
     name: sjekker version
