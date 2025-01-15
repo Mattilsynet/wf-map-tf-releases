@@ -46,7 +46,7 @@ jobs:
     needs: tag_printer
     name: sjekker version
     secrets: inherit
-    uses: Mattilsynet/wf-map-release-check/.github/workflows/Updatecheck.yaml@v1.0.15
+    uses: Mattilsynet/wf-map-release-check/.github/workflows/Updatecheck.yaml@v1.0.16
     with:
       send_to_pr: true
       self_predicted_tag: "${{ needs.tag_printer.outputs.version_tag }}"
