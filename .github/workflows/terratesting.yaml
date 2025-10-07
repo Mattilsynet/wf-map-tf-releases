@@ -29,8 +29,8 @@ on:
 jobs:
   deploy:
     permissions:
-      contents: 'read'
-      id-token: 'write'
+      contents: "read"
+      id-token: "write"
     name: Terratest testing
     runs-on: ubuntu-latest
     steps:
@@ -41,31 +41,31 @@ jobs:
           terraform_wrapper: false
       - uses: actions/setup-go@v4
         with:
-          go-version: '1.20.2'
-          cache: false
-      - id: 'gcp-auth'
-        name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@v1'
+          go-version: "1.24.5"
+          cache: true
+      - id: "gcp-auth"
+        name: "Authenticate to Google Cloud"
+        uses: "google-github-actions/auth@v1"
         with:
           workload_identity_provider: projects/${{ inputs.test_project_number }}/locations/global/workloadIdentityPools/${{ inputs.workload_identity_pool_id }}/providers/github
           service_account: tf-admin-sa@${{ inputs.test_project_id }}.iam.gserviceaccount.com
-      - id: 'prep-testing'
-        name: 'Prepare golang environment'
+      - id: "prep-testing"
+        name: "Prepare golang environment"
         run: |
           cd ${{ inputs.test_code_folder }}/
           go mod tidy
           gofmt -s -w *.go
-      - id: 'configure-git'
-        name: 'Configure git to use PAT'
+      - id: "configure-git"
+        name: "Configure git to use PAT"
         run: |
           git config --global url."https://oauth2:${{ secrets.READ_MAP_TF_MODULES }}@github.com/Mattilsynet".insteadOf "https://github.com/Mattilsynet"
-      - id: 'run-tests'
-        name: 'Run tests'
+      - id: "run-tests"
+        name: "Run tests"
         run: |
           cd ${{ inputs.test_code_folder }}/
           go test -v -run ${{ inputs.test_run_arg }} -timeout ${{ inputs.tests_overall_timeout }}
 
-      - id: 'clean-git'
-        name: 'Clean git config'
+      - id: "clean-git"
+        name: "Clean git config"
         run: |
           git config --global --unset url.https://oauth2:${{ secrets.READ_MAP_TF_MODULES }}@github.com/Mattilsynet.insteadof
