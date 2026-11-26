@@ -8,18 +8,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+        uses: hashicorp/setup-terraform@v3
 
       - name: Terraform format
         run: terraform fmt -recursive
         continue-on-error: true
 
-      - uses: terraform-linters/setup-tflint@v3
+      - uses: terraform-linters/setup-tflint@v6
 
       - name: Run TFLint
         run: tflint -f compact --recursive
