@@ -16,6 +16,8 @@ jobs:
   floating:
     name: Create floating tag
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Check out source
         uses: actions/checkout@v5
