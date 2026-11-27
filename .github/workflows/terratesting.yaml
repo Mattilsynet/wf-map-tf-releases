@@ -25,6 +25,11 @@ on:
         type: string
         required: false
         default: gh-actions-terratest
+      run_e2e:
+        type: boolean
+        required: false
+        default: false
+        description: "When true, export RUN_E2E=1 and E2E_PROJECT_ID and run the opt-in E2E test (module must gate its TestE2E on RUN_E2E)."
 
 jobs:
   deploy:
@@ -33,6 +38,9 @@ jobs:
       id-token: "write"
     name: Terratest testing
     runs-on: ubuntu-latest
+    concurrency:
+      group: terratest-${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v5
       - name: Setup Terraform
@@ -49,18 +57,31 @@ jobs:
         with:
           workload_identity_provider: projects/${{ inputs.test_project_number }}/locations/global/workloadIdentityPools/${{ inputs.workload_identity_pool_id }}/providers/github
           service_account: tf-admin-sa@${{ inputs.test_project_id }}.iam.gserviceaccount.com
+      - id: "validate-project"
+        name: "Validate test project id"
+        run: |
+          case "${{ inputs.test_project_id }}" in
+            tf-test-env-2381) echo "test project allowlisted" ;;
+            *) echo "::error::test_project_id '${{ inputs.test_project_id }}' is not allowlisted"; exit 1 ;;
+          esac
       - id: "prep-testing"
         name: "Prepare golang environment"
         run: |
           cd ${{ inputs.test_code_folder }}/
-          go mod tidy
-          gofmt -s -w *.go
+          # Do NOT run `go mod tidy` here: it reverts the pinned grpc/x/oauth2
+          # versions when the tests don't import them directly. `go test` runs
+          # with -mod=readonly, so the committed go.mod/go.sum must be complete.
+          files=$(gofmt -l .)
+          if [ -n "$files" ]; then echo "$files"; echo "::error::gofmt required on files above"; exit 1; fi
       - id: "configure-git"
         name: "Configure git to use PAT"
         run: |
           git config --global url."https://oauth2:${{ secrets.READ_MAP_TF_MODULES }}@github.com/Mattilsynet".insteadOf "https://github.com/Mattilsynet"
       - id: "run-tests"
         name: "Run tests"
+        env:
+          RUN_E2E: ${{ inputs.run_e2e && '1' || '' }}
+          E2E_PROJECT_ID: ${{ inputs.run_e2e && inputs.test_project_id || '' }}
         run: |
           cd ${{ inputs.test_code_folder }}/
           go test -v -run ${{ inputs.test_run_arg }} -timeout ${{ inputs.tests_overall_timeout }}
